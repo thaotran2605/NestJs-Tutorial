@@ -10,8 +10,6 @@ import { Response } from 'express';
 
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
-  private readonly logger = new Logger(HttpExceptionFilter.name);
-
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
@@ -40,8 +38,9 @@ export class HttpExceptionFilter implements ExceptionFilter {
     }
 
     if (status >= 500) {
-      this.logger.error(
+      Logger.error(
         `[${status}] Internal server error: ${exception instanceof Error ? exception.stack : String(exception)}`,
+        HttpExceptionFilter.name,
       );
     }
 
