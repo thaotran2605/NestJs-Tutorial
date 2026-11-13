@@ -4,7 +4,7 @@
 
 ---
 
-## 🛠️ Tech Stack & Key Features (Pull 1)
+##  Tech Stack & Key Features (Pull 1)
 
 - **Framework:** [NestJS](https://nestjs.com/) (Modular Architecture, ESM)
 - **API Documentation:** OpenAPI / Swagger UI at `/api/docs`
@@ -13,7 +13,7 @@
 
 ---
 
-## 🚀 Getting Started
+##  Getting Started
 
 ### 1. Requirements
 - Node.js >= 20 (Tested on Node.js v24)
@@ -47,7 +47,7 @@ Once running:
 
 ---
 
-## 🧪 Testing
+##  Testing
 
 ```bash
 # Run unit tests
@@ -59,7 +59,7 @@ npm run test:e2e
 
 ---
 
-## 📋 Pull Requests Roadmap
+##  Pull Requests Roadmap
 
 - [x] **Pull 1:** Init project, base modular architecture, i18n, Swagger OpenAPI & Health API
 - [ ] **Pull 2:** Database migration setup, User Entity, Auth (Register, Login, Redis Blacklist Logout, Current User)
