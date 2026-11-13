@@ -4,7 +4,7 @@
 
 ---
 
-## 🛠️ Tech Stack & Key Features (Pull 1 & Pull 2)
+##  Tech Stack & Key Features (Pull 1)
 
 - **Framework:** [NestJS](https://nestjs.com/) (Modular Architecture, ESM)
 - **Database & ORM:** MySQL 8 + TypeORM (Manual Migrations CLI)
@@ -16,7 +16,7 @@
 
 ---
 
-## 🚀 Getting Started
+##  Getting Started
 
 ### 1. Requirements
 - Node.js >= 20 (Tested on Node.js v24)
@@ -59,7 +59,7 @@ Once running:
 
 ---
 
-## 🧪 Testing & Linting
+##  Testing
 
 ```bash
 # Run unit tests
@@ -74,7 +74,7 @@ npm run lint:sun
 
 ---
 
-## 📋 Pull Requests Roadmap
+##  Pull Requests Roadmap
 
 - [x] **Pull 1:** Init project, base modular architecture, i18n, Swagger OpenAPI & Health API
 - [x] **Pull 2:** Database migration setup (MySQL 8), User Entity, Auth (Register, Login, Redis Blacklist Logout, Current User)
