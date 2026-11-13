@@ -1,12 +1,15 @@
 # Conduit API - NestJS RealWorld Backend Clone
 
-> Medium Clone RESTful API built with **NestJS**.
+> Medium Clone RESTful API built with **NestJS**, **TypeORM**, **MySQL 8**, **Redis**, and **JWT**.
 
 ---
 
-## 🛠️ Tech Stack & Key Features (Pull 1)
+## 🛠️ Tech Stack & Key Features (Pull 1 & Pull 2)
 
 - **Framework:** [NestJS](https://nestjs.com/) (Modular Architecture, ESM)
+- **Database & ORM:** MySQL 8 + TypeORM (Manual Migrations CLI)
+- **Caching & Revocation:** Redis 7 (Token Blacklist upon Logout)
+- **Authentication:** JWT (JSON Web Tokens) with Passport Strategy & Blacklist Guard
 - **API Documentation:** OpenAPI / Swagger UI at `/api/docs`
 - **Internationalization:** `nestjs-i18n` with support for English (`en`) and Vietnamese (`vi`)
 - **Testing:** Vitest & Supertest for Unit and E2E Testing
@@ -18,6 +21,7 @@
 ### 1. Requirements
 - Node.js >= 20 (Tested on Node.js v24)
 - npm >= 10
+- Docker Desktop (for MySQL 8 and Redis 7)
 
 ### 2. Setup Environment
 Clone the repository and copy the environment configuration:
@@ -25,13 +29,21 @@ Clone the repository and copy the environment configuration:
 cp .env.example .env
 ```
 
-### 3. Install Dependencies
+### 3. Start Database & Redis via Docker Compose
 ```bash
-npm install
+docker compose up -d
 ```
 
-### 4. Run the Application
+### 4. Run Database Migrations
 ```bash
+npm run migration:run
+```
+
+### 5. Install Dependencies & Run
+```bash
+# Install dependencies
+npm install
+
 # Development mode with watch
 npm run start:dev
 
@@ -47,7 +59,7 @@ Once running:
 
 ---
 
-## 🧪 Testing
+## 🧪 Testing & Linting
 
 ```bash
 # Run unit tests
@@ -55,6 +67,9 @@ npm test
 
 # Run e2e tests
 npm run test:e2e
+
+# Run Sunlint (Sun* Coding Standards)
+npm run lint:sun
 ```
 
 ---
@@ -62,7 +77,7 @@ npm run test:e2e
 ## 📋 Pull Requests Roadmap
 
 - [x] **Pull 1:** Init project, base modular architecture, i18n, Swagger OpenAPI & Health API
-- [ ] **Pull 2:** Database migration setup, User Entity, Auth (Register, Login, Redis Blacklist Logout, Current User)
+- [x] **Pull 2:** Database migration setup (MySQL 8), User Entity, Auth (Register, Login, Redis Blacklist Logout, Current User)
 - [ ] **Pull 3:** Profile, Follow/Unfollow, Polymorphic Attachments & Local Avatar upload
 - [ ] **Pull 4:** Articles Module (CRUD, Feed, Tag, Paging, Favorites)
 - [ ] **Pull 5:** Comments Module (CRD & Authorization)
