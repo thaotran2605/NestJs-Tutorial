@@ -1,0 +1,5 @@
+{
+  "HELLO": "Hello World from Conduit API!",
+  "WELCOME": "Welcome to Conduit RealWorld Backend",
+  "HEALTH_OK": "API is healthy and operational"
+}
