@@ -1,6 +1,6 @@
+import { randomUUID } from 'node:crypto';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { DEFAULT_JWT_EXPIRES_IN } from './auth.constants.js';
 import { RedisService } from '../redis/redis.service.js';
 import { User } from '../users/entities/user.entity.js';
 import { UsersService } from '../users/users.service.js';
@@ -43,11 +43,11 @@ export class AuthService {
     }
 
     const decoded = this.jwtService.decode(token) as JwtPayload | null;
-    if (decoded && decoded.exp) {
+    if (decoded && decoded.jti && decoded.exp) {
       const currentTime = Math.floor(Date.now() / 1000);
       const remainingSeconds = decoded.exp - currentTime;
       if (remainingSeconds > 0) {
-        await this.redisService.addTokenToBlacklist(token, remainingSeconds);
+        await this.redisService.addTokenToBlacklist(decoded.jti, remainingSeconds);
       }
     }
 
@@ -63,10 +63,9 @@ export class AuthService {
       sub: user.id,
       email: user.email,
       username: user.username,
+      jti: randomUUID(),
     };
-    return this.jwtService.signAsync(payload, {
-      expiresIn: DEFAULT_JWT_EXPIRES_IN,
-    });
+    return this.jwtService.signAsync(payload);
   }
 
   private formatUserResponse(user: User, token: string): UserResponseDto {

@@ -9,6 +9,7 @@ export interface JwtPayload {
   sub: number;
   email: string;
   username: string;
+  jti: string;
   iat?: number;
   exp?: number;
 }
@@ -22,17 +23,14 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     super({
       jwtFromRequest: extractJwtToken,
       ignoreExpiration: false,
-      secretOrKey: configService.get<string>(
-        'JWT_SECRET',
-        'super_secret_jwt_key_conduit_tutorial_2026',
-      ),
+      secretOrKey: configService.getOrThrow<string>('JWT_SECRET'),
     });
   }
 
   async validate(payload: JwtPayload) {
     const user = await this.usersService.findById(payload.sub);
     if (!user) {
-      throw new UnauthorizedException('User not found');
+      throw new UnauthorizedException('User not found or inactive');
     }
     return user;
   }

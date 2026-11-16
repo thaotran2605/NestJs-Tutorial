@@ -44,6 +44,7 @@ describe('AuthService', () => {
       signAsync: vi.fn().mockResolvedValue('sample-jwt-token'),
       decode: vi.fn().mockReturnValue({
         sub: 1,
+        jti: 'sample-jti',
         exp: Math.floor(Date.now() / 1000) + 3600,
       }),
     };
@@ -107,7 +108,10 @@ describe('AuthService', () => {
     it('should add token to redis blacklist with remaining ttl', async () => {
       const result = await authService.logout('sample-token');
       expect(result).toEqual({ message: 'Logged out successfully' });
-      expect(mockRedisService.addTokenToBlacklist).toHaveBeenCalled();
+      expect(mockRedisService.addTokenToBlacklist).toHaveBeenCalledWith(
+        'sample-jti',
+        expect.any(Number),
+      );
     });
   });
 

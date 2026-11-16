@@ -13,6 +13,7 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { RawToken } from '../../common/decorators/raw-token.decorator.js';
 import { AuthService } from './auth.service.js';
 import { LoginUserDto } from './dto/login.dto.js';
@@ -41,6 +42,8 @@ export class AuthController {
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @Header('Cache-Control', 'no-store, no-cache, must-revalidate')
   @Header('Pragma', 'no-cache')
   @Header('Expires', '0')
@@ -51,6 +54,7 @@ export class AuthController {
     type: UserResponseDto,
   })
   @ApiResponse({ status: 401, description: 'Invalid email or password' })
+  @ApiResponse({ status: 429, description: 'Too Many Requests - Rate limit exceeded' })
   async login(@Body() loginUserDto: LoginUserDto): Promise<UserResponseDto> {
     return this.authService.login(loginUserDto.user);
   }
@@ -67,6 +71,10 @@ export class AuthController {
   })
   @ApiResponse({ status: 200, description: 'User logged out successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({
+    status: 503,
+    description: 'Service Unavailable (Redis connection failure)',
+  })
   async logout(
     @RawToken() token: string | null,
   ): Promise<{ message: string }> {

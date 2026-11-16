@@ -4,7 +4,7 @@
 
 ---
 
-##  Tech Stack & Key Features (Pull 1)
+## 🛠️ Tech Stack & Key Features (Pull 1 & Pull 2)
 
 - **Framework:** [NestJS](https://nestjs.com/) (Modular Architecture, ESM)
 - **Database & ORM:** MySQL 8 + TypeORM (Manual Migrations CLI)
@@ -59,7 +59,11 @@ Once running:
 
 ---
 
+<<<<<<< HEAD
 ##  Testing
+=======
+##  Testing & Linting
+>>>>>>> 69e9d58 (fix(auth): address mentor review on env validation, timing attacks, redis fail-closed, and rate limiting)
 
 ```bash
 # Run unit tests

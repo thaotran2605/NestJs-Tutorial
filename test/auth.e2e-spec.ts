@@ -1,4 +1,5 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
 import { App } from 'supertest/types.js';
@@ -27,6 +28,9 @@ describe('Auth & User API (e2e)', () => {
       }),
     );
     await app.init();
+
+    const configService = app.get(ConfigService);
+    expect(configService.get('DB_DATABASE')).toBe('conduit_test');
   });
 
   afterAll(async () => {
@@ -66,6 +70,19 @@ describe('Auth & User API (e2e)', () => {
         })
         .expect(409);
     });
+
+    it('should return 409 when registering with existing username', async () => {
+      await request(app.getHttpServer())
+        .post('/api/users')
+        .send({
+          user: {
+            username: testUsername,
+            email: `diff_${uniqueSuffix}@example.com`,
+            password: testPassword,
+          },
+        })
+        .expect(409);
+    });
   });
 
   describe('POST /api/users/login (Login)', () => {
@@ -96,6 +113,34 @@ describe('Auth & User API (e2e)', () => {
           },
         })
         .expect(401);
+    });
+
+    it('should return 429 when exceeding rate limit on login', async () => {
+      // Login endpoint has a limit of 5 requests per minute.
+      // 2 requests were already sent above; sending 3 more consumes the quota.
+      for (let i = 0; i < 3; i++) {
+        await request(app.getHttpServer())
+          .post('/api/users/login')
+          .send({
+            user: {
+              email: testEmail,
+              password: 'WrongPassword!',
+            },
+          });
+      }
+
+      // The 6th request within the window must be throttled with 429
+      const throttledResponse = await request(app.getHttpServer())
+        .post('/api/users/login')
+        .send({
+          user: {
+            email: testEmail,
+            password: testPassword,
+          },
+        })
+        .expect(429);
+
+      expect(throttledResponse.status).toBe(429);
     });
   });
 

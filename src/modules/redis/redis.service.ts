@@ -1,9 +1,6 @@
 import { Inject, Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 import { Redis } from 'ioredis';
-import {
-  BLACKLIST_PREFIX,
-  REDIS_CLIENT,
-} from './redis.constants.js';
+import { BLACKLIST_PREFIX, REDIS_CLIENT } from './redis.constants.js';
 
 @Injectable()
 export class RedisService implements OnModuleDestroy {
@@ -25,16 +22,19 @@ export class RedisService implements OnModuleDestroy {
     return this.redisClient.del(key);
   }
 
-  async addTokenToBlacklist(token: string, ttlSeconds: number): Promise<void> {
-    if (ttlSeconds <= 0) {
+  async addTokenToBlacklist(jti: string, ttlSeconds: number): Promise<void> {
+    if (!jti || ttlSeconds <= 0) {
       return;
     }
-    const key = `${BLACKLIST_PREFIX}${token}`;
+    const key = `${BLACKLIST_PREFIX}${jti}`;
     await this.set(key, 'revoked', ttlSeconds);
   }
 
-  async isTokenBlacklisted(token: string): Promise<boolean> {
-    const key = `${BLACKLIST_PREFIX}${token}`;
+  async isTokenBlacklisted(jti: string): Promise<boolean> {
+    if (!jti) {
+      return false;
+    }
+    const key = `${BLACKLIST_PREFIX}${jti}`;
     const result = await this.get(key);
     return result !== null;
   }

@@ -6,5 +6,9 @@ export default defineConfig({
     globals: true,
     root: './',
     include: ['**/*.e2e-spec.ts'],
+    env: {
+      NODE_ENV: 'test',
+      DB_DATABASE: 'conduit_test',
+    },
   },
 });

@@ -69,6 +69,54 @@ describe('UsersService', () => {
         }),
       ).rejects.toThrow(ConflictException);
     });
+
+    it('should catch MySQL ER_DUP_ENTRY on email during save() race condition and throw 409', async () => {
+      mockRepository.findOne.mockResolvedValue(null);
+      mockRepository.save.mockRejectedValueOnce({
+        code: 'ER_DUP_ENTRY',
+        errno: 1062,
+        message: 'Duplicate entry for key users.IDX_97672ac88f789774dd47f7c8be',
+      });
+
+      await expect(
+        service.createUser({
+          username: 'jacob',
+          email: 'jacob@example.com',
+          password: 'password123',
+        }),
+      ).rejects.toThrow(new ConflictException('Email has already been taken'));
+    });
+
+    it('should catch MySQL ER_DUP_ENTRY on username during save() race condition and throw 409', async () => {
+      mockRepository.findOne.mockResolvedValue(null);
+      mockRepository.save.mockRejectedValueOnce({
+        code: 'ER_DUP_ENTRY',
+        errno: 1062,
+        message: 'Duplicate entry for key users.IDX_fe0bb3f6520ee0469504521e71',
+      });
+
+      await expect(
+        service.createUser({
+          username: 'jacob',
+          email: 'jacob@example.com',
+          password: 'password123',
+        }),
+      ).rejects.toThrow(new ConflictException('Username has already been taken'));
+    });
+
+    it('should rethrow unexpected database errors during save()', async () => {
+      mockRepository.findOne.mockResolvedValue(null);
+      const dbError = new Error('Database connection failed');
+      mockRepository.save.mockRejectedValueOnce(dbError);
+
+      await expect(
+        service.createUser({
+          username: 'jacob',
+          email: 'jacob@example.com',
+          password: 'password123',
+        }),
+      ).rejects.toThrow(dbError);
+    });
   });
 
   describe('validateCredentials', () => {
