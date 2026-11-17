@@ -10,6 +10,7 @@ describe('AuthService', () => {
   let authService: AuthService;
   let mockUsersService: {
     createUser: ReturnType<typeof vi.fn>;
+    updateUser: ReturnType<typeof vi.fn>;
     validateCredentials: ReturnType<typeof vi.fn>;
     findById: ReturnType<typeof vi.fn>;
   };
@@ -36,6 +37,10 @@ describe('AuthService', () => {
   beforeEach(async () => {
     mockUsersService = {
       createUser: vi.fn().mockResolvedValue(sampleUser),
+      updateUser: vi.fn().mockResolvedValue({
+        user: { ...sampleUser, bio: 'Updated Bio' },
+        isPasswordChanged: false,
+      }),
       validateCredentials: vi.fn().mockResolvedValue(sampleUser),
       findById: vi.fn().mockResolvedValue(sampleUser),
     };
@@ -120,6 +125,39 @@ describe('AuthService', () => {
       const result = authService.getCurrentUser(sampleUser, 'current-token');
       expect(result.user.username).toBe('jacob');
       expect(result.user.token).toBe('current-token');
+    });
+  });
+
+  describe('updateCurrentUser', () => {
+    it('should update user and retain current token when password is not changed', async () => {
+      const result = await authService.updateCurrentUser(
+        sampleUser,
+        'current-token',
+        { user: { bio: 'Updated Bio' } },
+      );
+
+      expect(result.user.bio).toBe('Updated Bio');
+      expect(result.user.token).toBe('current-token');
+      expect(mockRedisService.addTokenToBlacklist).not.toHaveBeenCalled();
+    });
+
+    it('should blacklist old token and issue new token when password is changed', async () => {
+      mockUsersService.updateUser.mockResolvedValueOnce({
+        user: sampleUser,
+        isPasswordChanged: true,
+      });
+
+      const result = await authService.updateCurrentUser(
+        sampleUser,
+        'old-token',
+        { password: 'NewPassword123!' },
+      );
+
+      expect(mockRedisService.addTokenToBlacklist).toHaveBeenCalledWith(
+        'sample-jti',
+        expect.any(Number),
+      );
+      expect(result.user.token).toBe('sample-jwt-token');
     });
   });
 });

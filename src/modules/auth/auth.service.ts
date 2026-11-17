@@ -1,7 +1,12 @@
 import { randomUUID } from 'node:crypto';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { UploadedAvatarFile } from '../attachments/attachments.service.js';
 import { RedisService } from '../redis/redis.service.js';
+import {
+  UpdateUserDataDto,
+  UpdateUserDto,
+} from '../users/dto/update-user.dto.js';
 import { User } from '../users/entities/user.entity.js';
 import { UsersService } from '../users/users.service.js';
 import { LoginCredentialsDto } from './dto/login.dto.js';
@@ -56,6 +61,25 @@ export class AuthService {
 
   getCurrentUser(user: User, token: string): UserResponseDto {
     return this.formatUserResponse(user, token);
+  }
+
+  async updateCurrentUser(
+    user: User,
+    currentToken: string,
+    dto: UpdateUserDto,
+    avatarFile?: UploadedAvatarFile,
+  ): Promise<UserResponseDto> {
+    const updateData: UpdateUserDataDto = dto.user ?? dto;
+    const { user: updatedUser, isPasswordChanged } =
+      await this.usersService.updateUser(user, updateData, avatarFile);
+
+    let activeToken = currentToken;
+    if (isPasswordChanged) {
+      await this.logout(currentToken);
+      activeToken = await this.generateToken(updatedUser);
+    }
+
+    return this.formatUserResponse(updatedUser, activeToken);
   }
 
   private async generateToken(user: User): Promise<string> {
