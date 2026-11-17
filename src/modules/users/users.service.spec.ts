@@ -2,6 +2,7 @@ import { ConflictException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
+import { AttachmentsService } from '../attachments/attachments.service.js';
 import { User } from './entities/user.entity.js';
 import { UsersService } from './users.service.js';
 
@@ -11,6 +12,9 @@ describe('UsersService', () => {
     findOne: ReturnType<typeof vi.fn>;
     create: ReturnType<typeof vi.fn>;
     save: ReturnType<typeof vi.fn>;
+  };
+  let mockAttachmentsService: {
+    saveEntityAvatar: ReturnType<typeof vi.fn>;
   };
 
   const sampleUser: User = {
@@ -31,12 +35,23 @@ describe('UsersService', () => {
       save: vi.fn().mockImplementation((user) => Promise.resolve(user)),
     };
 
+    mockAttachmentsService = {
+      saveEntityAvatar: vi.fn().mockResolvedValue({
+        id: 'uuid-1234',
+        url: '/uploads/avatars/uuid-1234.png',
+      }),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UsersService,
         {
           provide: getRepositoryToken(User),
           useValue: mockRepository,
+        },
+        {
+          provide: AttachmentsService,
+          useValue: mockAttachmentsService,
         },
       ],
     }).compile();
@@ -101,7 +116,9 @@ describe('UsersService', () => {
           email: 'jacob@example.com',
           password: 'password123',
         }),
-      ).rejects.toThrow(new ConflictException('Username has already been taken'));
+      ).rejects.toThrow(
+        new ConflictException('Username has already been taken'),
+      );
     });
 
     it('should rethrow unexpected database errors during save()', async () => {
@@ -116,6 +133,61 @@ describe('UsersService', () => {
           password: 'password123',
         }),
       ).rejects.toThrow(dbError);
+    });
+  });
+
+  describe('updateUser', () => {
+    it('should update user bio and avatar via AttachmentsService', async () => {
+      mockRepository.findOne.mockResolvedValue(null);
+      const currentUser: User = { ...sampleUser };
+      const avatarFile = {
+        fieldname: 'avatar',
+        originalname: 'me.png',
+        encoding: '7bit',
+        mimetype: 'image/png',
+        size: 1024,
+        buffer: Buffer.from('fake-image'),
+      };
+
+      const result = await service.updateUser(
+        currentUser,
+        { bio: 'Updated bio' },
+        avatarFile,
+      );
+
+      expect(result.user.bio).toBe('Updated bio');
+      expect(result.user.image).toBe('/uploads/avatars/uuid-1234.png');
+      expect(result.isPasswordChanged).toBe(false);
+      expect(mockAttachmentsService.saveEntityAvatar).toHaveBeenCalledWith(
+        'User',
+        1,
+        avatarFile,
+      );
+    });
+
+    it('should hash new password and set isPasswordChanged to true', async () => {
+      mockRepository.findOne.mockResolvedValue(null);
+      const currentUser: User = { ...sampleUser };
+
+      const result = await service.updateUser(currentUser, {
+        password: 'NewPassword123!',
+      });
+
+      expect(result.isPasswordChanged).toBe(true);
+      expect(result.user.password).not.toBe('NewPassword123!');
+    });
+
+    it('should throw ConflictException when updating email to another existing user email', async () => {
+      mockRepository.findOne.mockResolvedValueOnce({
+        ...sampleUser,
+        id: 2,
+        email: 'taken@example.com',
+      });
+      const currentUser: User = { ...sampleUser };
+
+      await expect(
+        service.updateUser(currentUser, { email: 'taken@example.com' }),
+      ).rejects.toThrow(new ConflictException('Email has already been taken'));
     });
   });
 

@@ -1,15 +1,35 @@
-import { Controller, Get, Header, UseGuards } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  Header,
+  Put,
+  UploadedFile,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import {
   ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
   ApiOperation,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import { RawToken } from '../../common/decorators/raw-token.decorator.js';
+import {
+  MAX_AVATAR_FILES_COUNT,
+  MAX_AVATAR_FILE_SIZE,
+  MIME_TO_EXTENSION,
+} from '../attachments/attachments.constants.js';
+import type { UploadedAvatarFile } from '../attachments/attachments.service.js';
 import { AuthService } from '../auth/auth.service.js';
 import { UserResponseDto } from '../auth/dto/user-response.dto.js';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
+import { UpdateUserDto } from './dto/update-user.dto.js';
 import { User } from './entities/user.entity.js';
 
 @ApiTags('Current User')
@@ -35,5 +55,76 @@ export class UserController {
     @RawToken() token: string,
   ): UserResponseDto {
     return this.authService.getCurrentUser(user, token);
+  }
+
+  @Put()
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(
+    FileInterceptor('avatar', {
+      limits: {
+        fileSize: MAX_AVATAR_FILE_SIZE,
+        files: MAX_AVATAR_FILES_COUNT,
+      },
+      fileFilter: (_req, file, callback) => {
+        if (!MIME_TO_EXTENSION[file.mimetype]) {
+          callback(
+            new BadRequestException(
+              'Only image files (jpeg, png, webp, gif) are allowed',
+            ),
+            false,
+          );
+          return;
+        }
+        callback(null, true);
+      },
+    }),
+  )
+  @ApiBearerAuth('JWT-auth')
+  @ApiConsumes('multipart/form-data', 'application/json')
+  @ApiBody({
+    description:
+      'Update user info via multipart/form-data (with optional avatar file) or application/json ({ user: { ... } })',
+    schema: {
+      type: 'object',
+      properties: {
+        email: { type: 'string', example: 'jacob_new@example.com' },
+        username: { type: 'string', example: 'jacob_new' },
+        password: { type: 'string', example: 'NewPassword123!' },
+        bio: { type: 'string', example: 'I work at statefarm' },
+        image: { type: 'string', example: '/uploads/avatars/sample.png' },
+        avatar: {
+          type: 'string',
+          format: 'binary',
+          description: 'Optional avatar image file (jpeg, png, webp, gif, max 2MB)',
+        },
+      },
+    },
+  })
+  @Header('Cache-Control', 'no-store, no-cache, must-revalidate')
+  @Header('Pragma', 'no-cache')
+  @Header('Expires', '0')
+  @ApiOperation({
+    summary: 'Update current user profile and optionally upload avatar',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'User updated successfully',
+    type: UserResponseDto,
+  })
+  @ApiResponse({ status: 400, description: 'Invalid input or file format' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 409, description: 'Email or username already taken' })
+  async updateCurrentUser(
+    @CurrentUser() user: User,
+    @RawToken() token: string,
+    @Body() updateUserDto: UpdateUserDto,
+    @UploadedFile() avatarFile?: UploadedAvatarFile,
+  ): Promise<UserResponseDto> {
+    return this.authService.updateCurrentUser(
+      user,
+      token,
+      updateUserDto,
+      avatarFile,
+    );
   }
 }
