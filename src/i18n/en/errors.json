@@ -12,5 +12,8 @@
   "PROFILE_CANNOT_UNFOLLOW_SELF": "You cannot unfollow yourself",
   "ATTACHMENT_EMPTY_OR_INVALID": "Uploaded file is empty or invalid",
   "ATTACHMENT_SIZE_EXCEEDED": "File size exceeds the 2MB limit",
-  "ATTACHMENT_INVALID_TYPE": "Only image files (jpeg, png, webp, gif) are allowed"
+  "ATTACHMENT_INVALID_TYPE": "Only image files (jpeg, png, webp, gif) are allowed",
+  "ARTICLE_NOT_FOUND": "Article not found",
+  "ARTICLE_FORBIDDEN_UPDATE": "You are not authorized to update this article",
+  "ARTICLE_FORBIDDEN_DELETE": "You are not authorized to delete this article"
 }

@@ -12,6 +12,10 @@ import {
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 import { validateEnv } from './config/env.validation.js';
+import { ArticlesModule } from './modules/articles/articles.module.js';
+import { ArticleFavorite } from './modules/articles/entities/article-favorite.entity.js';
+import { Article } from './modules/articles/entities/article.entity.js';
+import { Tag } from './modules/articles/entities/tag.entity.js';
 import { AttachmentsModule } from './modules/attachments/attachments.module.js';
 import { Attachment } from './modules/attachments/entities/attachment.entity.js';
 import { AuthModule } from './modules/auth/auth.module.js';
@@ -41,6 +45,7 @@ const DEFAULT_THROTTLE_LIMIT = 30;
     UsersModule,
     AuthModule,
     ProfilesModule,
+    ArticlesModule,
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -52,7 +57,7 @@ const DEFAULT_THROTTLE_LIMIT = 30;
         password: config.getOrThrow<string>('DB_PASSWORD'),
         database: config.getOrThrow<string>('DB_DATABASE'),
         charset: 'utf8mb4_unicode_ci',
-        entities: [User, Attachment, Follow],
+        entities: [User, Attachment, Follow, Article, Tag, ArticleFavorite],
         synchronize: false,
       }),
     }),

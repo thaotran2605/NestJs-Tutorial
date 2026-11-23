@@ -12,5 +12,8 @@
   "PROFILE_CANNOT_UNFOLLOW_SELF": "Bạn không thể tự hủy theo dõi chính mình",
   "ATTACHMENT_EMPTY_OR_INVALID": "Tệp tải lên trống hoặc không hợp lệ",
   "ATTACHMENT_SIZE_EXCEEDED": "Kích thước tệp vượt quá giới hạn 2MB",
-  "ATTACHMENT_INVALID_TYPE": "Chỉ cho phép tệp hình ảnh (jpeg, png, webp, gif)"
+  "ATTACHMENT_INVALID_TYPE": "Chỉ cho phép tệp hình ảnh (jpeg, png, webp, gif)",
+  "ARTICLE_NOT_FOUND": "Không tìm thấy bài viết",
+  "ARTICLE_FORBIDDEN_UPDATE": "Bạn không có quyền chỉnh sửa bài viết này",
+  "ARTICLE_FORBIDDEN_DELETE": "Bạn không có quyền xóa bài viết này"
 }

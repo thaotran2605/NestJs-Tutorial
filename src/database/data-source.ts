@@ -1,5 +1,8 @@
 import 'dotenv/config';
 import { DataSource } from 'typeorm';
+import { ArticleFavorite } from '../modules/articles/entities/article-favorite.entity.js';
+import { Article } from '../modules/articles/entities/article.entity.js';
+import { Tag } from '../modules/articles/entities/tag.entity.js';
 import { Attachment } from '../modules/attachments/entities/attachment.entity.js';
 import { Follow } from '../modules/profiles/entities/follow.entity.js';
 import { User } from '../modules/users/entities/user.entity.js';
@@ -28,7 +31,7 @@ export default new DataSource({
   password: process.env.DB_PASSWORD,
   database: process.env.DB_DATABASE,
   charset: 'utf8mb4_unicode_ci',
-  entities: [User, Attachment, Follow],
+  entities: [User, Attachment, Follow, Article, Tag, ArticleFavorite],
   migrations: ['src/database/migrations/*.ts'],
   synchronize: false,
 });
