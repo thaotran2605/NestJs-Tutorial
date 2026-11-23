@@ -1,0 +1,16 @@
+{
+  "AUTH_INVALID_CREDENTIALS": "Invalid email or password",
+  "AUTH_TOKEN_REVOKED": "Token has been revoked",
+  "AUTH_SERVICE_UNAVAILABLE": "Authentication service temporarily unavailable",
+  "AUTH_USER_INACTIVE": "User not found or inactive",
+  "USER_EMAIL_TAKEN": "Email has already been taken",
+  "USER_USERNAME_TAKEN": "Username has already been taken",
+  "USER_ALREADY_EXISTS": "User already exists",
+  "USER_INVALID_IMAGE_URL": "Image must be a valid http(s) URL or /uploads/avatars/ path",
+  "PROFILE_NOT_FOUND": "Profile not found",
+  "PROFILE_CANNOT_FOLLOW_SELF": "You cannot follow yourself",
+  "PROFILE_CANNOT_UNFOLLOW_SELF": "You cannot unfollow yourself",
+  "ATTACHMENT_EMPTY_OR_INVALID": "Uploaded file is empty or invalid",
+  "ATTACHMENT_SIZE_EXCEEDED": "File size exceeds the 2MB limit",
+  "ATTACHMENT_INVALID_TYPE": "Only image files (jpeg, png, webp, gif) are allowed"
+}

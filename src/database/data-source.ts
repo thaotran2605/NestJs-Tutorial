@@ -1,5 +1,7 @@
 import 'dotenv/config';
 import { DataSource } from 'typeorm';
+import { Attachment } from '../modules/attachments/entities/attachment.entity.js';
+import { Follow } from '../modules/profiles/entities/follow.entity.js';
 import { User } from '../modules/users/entities/user.entity.js';
 
 const requiredEnvVars = [
@@ -26,7 +28,7 @@ export default new DataSource({
   password: process.env.DB_PASSWORD,
   database: process.env.DB_DATABASE,
   charset: 'utf8mb4_unicode_ci',
-  entities: [User],
+  entities: [User, Attachment, Follow],
   migrations: ['src/database/migrations/*.ts'],
   synchronize: false,
 });

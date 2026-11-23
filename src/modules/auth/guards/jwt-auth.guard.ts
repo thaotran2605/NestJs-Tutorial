@@ -8,6 +8,8 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { AuthGuard } from '@nestjs/passport';
 import { Request } from 'express';
+import { I18nService } from 'nestjs-i18n';
+import { translateWithContext } from '../../../common/utils/i18n.helper.js';
 import { RedisService } from '../../redis/redis.service.js';
 import { extractJwtToken } from '../strategies/jwt-extractor.js';
 import { JwtPayload } from '../strategies/jwt.strategy.js';
@@ -17,11 +19,12 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
   constructor(
     private readonly redisService: RedisService,
     private readonly jwtService: JwtService,
+    private readonly i18n: I18nService,
   ) {
     super();
   }
 
-  async canActivate(context: ExecutionContext): Promise<boolean> {
+  override async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<Request>();
     const token = extractJwtToken(request);
 
@@ -32,7 +35,9 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
           const isBlacklisted =
             await this.redisService.isTokenBlacklisted(decoded.jti);
           if (isBlacklisted) {
-            throw new UnauthorizedException('Token has been revoked');
+            throw new UnauthorizedException(
+              translateWithContext(this.i18n, 'errors.AUTH_TOKEN_REVOKED'),
+            );
           }
         }
       } catch (error) {
@@ -41,13 +46,14 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
         }
         Logger.error(
           {
-            message: 'Redis blacklist check failed - failing closed for security',
+            message:
+              'Redis blacklist check failed - failing closed for security',
             error: error instanceof Error ? error.message : String(error),
           },
           JwtAuthGuard.name,
         );
         throw new ServiceUnavailableException(
-          'Authentication service temporarily unavailable',
+          translateWithContext(this.i18n, 'errors.AUTH_SERVICE_UNAVAILABLE'),
         );
       }
     }

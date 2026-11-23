@@ -1,15 +1,26 @@
+import * as path from 'node:path';
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module.js';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter.js';
+import { PUBLIC_DIR_NAME } from './modules/attachments/attachments.constants.js';
+
+const DEFAULT_APP_PORT = 3000;
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
   const logger = new Logger('Bootstrap');
 
   // Enable CORS
   app.enableCors();
+
+  // Serve public uploaded assets safely (disable directory indexing and dotfiles)
+  app.useStaticAssets(path.resolve(process.cwd(), PUBLIC_DIR_NAME), {
+    index: false,
+    dotfiles: 'deny',
+  });
 
   // Set global API prefix
   app.setGlobalPrefix('api');
@@ -56,7 +67,7 @@ async function bootstrap() {
     },
   });
 
-  const port = Number(process.env.PORT) || 3000;
+  const port = Number(process.env.PORT) || DEFAULT_APP_PORT;
   await app.listen(port);
 
   logger.log(`🚀 Application is running on: http://localhost:${port}/api`);

@@ -1,0 +1,16 @@
+{
+  "AUTH_INVALID_CREDENTIALS": "Email hoặc mật khẩu không chính xác",
+  "AUTH_TOKEN_REVOKED": "Token đã bị thu hồi",
+  "AUTH_SERVICE_UNAVAILABLE": "Dịch vụ xác thực tạm thời không khả dụng",
+  "AUTH_USER_INACTIVE": "Người dùng không tồn tại hoặc đã bị vô hiệu hóa",
+  "USER_EMAIL_TAKEN": "Email đã được sử dụng",
+  "USER_USERNAME_TAKEN": "Tên người dùng đã được sử dụng",
+  "USER_ALREADY_EXISTS": "Người dùng đã tồn tại",
+  "USER_INVALID_IMAGE_URL": "Đường dẫn ảnh phải là URL http(s) hợp lệ hoặc đường dẫn /uploads/avatars/",
+  "PROFILE_NOT_FOUND": "Không tìm thấy hồ sơ người dùng",
+  "PROFILE_CANNOT_FOLLOW_SELF": "Bạn không thể tự theo dõi chính mình",
+  "PROFILE_CANNOT_UNFOLLOW_SELF": "Bạn không thể tự hủy theo dõi chính mình",
+  "ATTACHMENT_EMPTY_OR_INVALID": "Tệp tải lên trống hoặc không hợp lệ",
+  "ATTACHMENT_SIZE_EXCEEDED": "Kích thước tệp vượt quá giới hạn 2MB",
+  "ATTACHMENT_INVALID_TYPE": "Chỉ cho phép tệp hình ảnh (jpeg, png, webp, gif)"
+}

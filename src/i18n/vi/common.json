@@ -1,5 +1,6 @@
 {
   "HELLO": "Xin chào từ Conduit API!",
   "WELCOME": "Chào mừng bạn đến với backend Conduit RealWorld",
-  "HEALTH_OK": "Hệ thống đang hoạt động bình thường"
+  "HEALTH_OK": "Hệ thống đang hoạt động bình thường",
+  "LOGOUT_SUCCESS": "Đăng xuất thành công"
 }
