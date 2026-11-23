@@ -4,7 +4,9 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { I18nService } from 'nestjs-i18n';
 import { Repository } from 'typeorm';
+import { translateWithContext } from '../../common/utils/i18n.helper.js';
 import { User } from '../users/entities/user.entity.js';
 import { UsersService } from '../users/users.service.js';
 import { ProfileResponseDto } from './dto/profile-response.dto.js';
@@ -19,6 +21,7 @@ export class ProfilesService {
     @InjectRepository(Follow)
     private readonly followRepository: Repository<Follow>,
     private readonly usersService: UsersService,
+    private readonly i18n: I18nService,
   ) {}
 
   async getProfile(
@@ -48,7 +51,9 @@ export class ProfilesService {
     const targetUser = await this.findTargetUserOrThrow(targetUsername);
 
     if (targetUser.id === currentUser.id) {
-      throw new BadRequestException('You cannot follow yourself');
+      throw new BadRequestException(
+        translateWithContext(this.i18n, 'errors.PROFILE_CANNOT_FOLLOW_SELF'),
+      );
     }
 
     const existingFollow = await this.followRepository.findOne({
@@ -85,7 +90,9 @@ export class ProfilesService {
     const targetUser = await this.findTargetUserOrThrow(targetUsername);
 
     if (targetUser.id === currentUser.id) {
-      throw new BadRequestException('You cannot unfollow yourself');
+      throw new BadRequestException(
+        translateWithContext(this.i18n, 'errors.PROFILE_CANNOT_UNFOLLOW_SELF'),
+      );
     }
 
     await this.followRepository.delete({
@@ -99,7 +106,9 @@ export class ProfilesService {
   private async findTargetUserOrThrow(username: string): Promise<User> {
     const targetUser = await this.usersService.findByUsername(username);
     if (!targetUser) {
-      throw new NotFoundException('Profile not found');
+      throw new NotFoundException(
+        translateWithContext(this.i18n, 'errors.PROFILE_NOT_FOUND'),
+      );
     }
     return targetUser;
   }

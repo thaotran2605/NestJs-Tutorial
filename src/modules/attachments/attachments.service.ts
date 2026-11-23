@@ -3,7 +3,9 @@ import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { I18nService } from 'nestjs-i18n';
+import { EntityManager, Repository } from 'typeorm';
+import { translateWithContext } from '../../common/utils/i18n.helper.js';
 import {
   ATTACHMENT_FILE_NAME_MAX_LENGTH,
   AVATAR_UPLOAD_SUBDIR,
@@ -22,60 +24,130 @@ export interface UploadedAvatarFile {
   buffer: Buffer;
 }
 
+export interface PreparedAvatarFile {
+  id: string;
+  fileName: string;
+  fileType: string;
+  fileSize: number;
+  url: string;
+  diskPath: string;
+}
+
 @Injectable()
 export class AttachmentsService {
   constructor(
     @InjectRepository(Attachment)
     private readonly attachmentRepository: Repository<Attachment>,
+    private readonly i18n: I18nService,
   ) {}
 
-  async saveEntityAvatar(
-    entityType: string,
-    entityId: number,
+  validateImageFile(file: UploadedAvatarFile): void {
+    if (!file || !file.buffer || file.size <= 0) {
+      throw new BadRequestException(
+        translateWithContext(this.i18n, 'errors.ATTACHMENT_EMPTY_OR_INVALID'),
+      );
+    }
+
+    if (file.size > MAX_AVATAR_FILE_SIZE) {
+      throw new BadRequestException(
+        translateWithContext(this.i18n, 'errors.ATTACHMENT_SIZE_EXCEEDED'),
+      );
+    }
+
+    const extension = MIME_TO_EXTENSION[file.mimetype];
+    if (!extension) {
+      throw new BadRequestException(
+        translateWithContext(this.i18n, 'errors.ATTACHMENT_INVALID_TYPE'),
+      );
+    }
+  }
+
+  async prepareAndWriteAvatarFile(
     file: UploadedAvatarFile,
-  ): Promise<Attachment> {
+  ): Promise<PreparedAvatarFile> {
     this.validateImageFile(file);
 
     const extension = MIME_TO_EXTENSION[file.mimetype];
     const fileUuid = randomUUID();
     const storedFileName = `${fileUuid}${extension}`;
 
-    const uploadDir = path.resolve(
-      process.cwd(),
-      PUBLIC_DIR_NAME,
-      AVATAR_UPLOAD_SUBDIR,
-    );
+    const uploadDir = this.getAvatarUploadDir();
     await fs.mkdir(uploadDir, { recursive: true });
 
     const targetFilePath = path.join(uploadDir, storedFileName);
     await fs.writeFile(targetFilePath, file.buffer);
 
-    const sanitizedOriginalName = this.sanitizeOriginalFileName(
-      file.originalname,
-    );
-    const publicUrl = `/${AVATAR_UPLOAD_SUBDIR}/${storedFileName}`;
+    return {
+      id: fileUuid,
+      fileName: this.sanitizeOriginalFileName(file.originalname),
+      fileType: file.mimetype,
+      fileSize: file.size,
+      url: `/${AVATAR_UPLOAD_SUBDIR}/${storedFileName}`,
+      diskPath: targetFilePath,
+    };
+  }
 
-    const existingAttachments = await this.attachmentRepository.find({
+  async replaceEntityAttachmentInTx(
+    manager: EntityManager,
+    entityType: string,
+    entityId: number,
+    preparedFile: PreparedAvatarFile,
+  ): Promise<string[]> {
+    const existingAttachments = await manager.find(Attachment, {
       where: { entityType, entityId },
     });
 
-    const newAttachment = this.attachmentRepository.create({
-      id: fileUuid,
-      entityType,
-      entityId,
-      fileName: sanitizedOriginalName,
-      fileType: file.mimetype,
-      fileSize: file.size,
-      url: publicUrl,
-    });
-
-    const savedAttachment = await this.attachmentRepository.save(newAttachment);
+    const oldUrls = existingAttachments.map((item) => item.url);
 
     if (existingAttachments.length > 0) {
-      await this.removeOldAttachments(existingAttachments, uploadDir);
+      await manager.delete(
+        Attachment,
+        existingAttachments.map((item) => item.id),
+      );
     }
 
-    return savedAttachment;
+    const newAttachment = manager.create(Attachment, {
+      id: preparedFile.id,
+      entityType,
+      entityId,
+      fileName: preparedFile.fileName,
+      fileType: preparedFile.fileType,
+      fileSize: preparedFile.fileSize,
+      url: preparedFile.url,
+    });
+
+    await manager.save(Attachment, newAttachment);
+    return oldUrls;
+  }
+
+  async deleteAvatarFilesFromDisk(urls: string[]): Promise<void> {
+    const uploadDir = this.getAvatarUploadDir();
+
+    for (const url of urls) {
+      if (!url.startsWith(`/${AVATAR_UPLOAD_SUBDIR}/`)) {
+        continue;
+      }
+      const storedFile = path.basename(url);
+      if (storedFile) {
+        await this.deleteDiskFile(path.join(uploadDir, storedFile));
+      }
+    }
+  }
+
+  async deleteDiskFile(filePath: string): Promise<void> {
+    try {
+      await fs.unlink(filePath);
+    } catch (error) {
+      Logger.warn(
+        {
+          message: 'Could not delete attachment file from disk',
+          action: 'Verify file permissions or ignore if already removed',
+          filePath,
+          reason: error instanceof Error ? error.message : String(error),
+        },
+        AttachmentsService.name,
+      );
+    }
   }
 
   async findByEntity(
@@ -88,21 +160,8 @@ export class AttachmentsService {
     });
   }
 
-  private validateImageFile(file: UploadedAvatarFile): void {
-    if (!file || !file.buffer || file.size <= 0) {
-      throw new BadRequestException('Uploaded file is empty or invalid');
-    }
-
-    if (file.size > MAX_AVATAR_FILE_SIZE) {
-      throw new BadRequestException('File size exceeds the 2MB limit');
-    }
-
-    const extension = MIME_TO_EXTENSION[file.mimetype];
-    if (!extension) {
-      throw new BadRequestException(
-        'Only image files (jpeg, png, webp, gif) are allowed',
-      );
-    }
+  private getAvatarUploadDir(): string {
+    return path.resolve(process.cwd(), PUBLIC_DIR_NAME, AVATAR_UPLOAD_SUBDIR);
   }
 
   private sanitizeOriginalFileName(originalName: string): string {
@@ -111,33 +170,5 @@ export class AttachmentsService {
       .replace(/[^a-zA-Z0-9._-]/g, '_')
       .slice(0, ATTACHMENT_FILE_NAME_MAX_LENGTH);
     return cleaned || 'avatar';
-  }
-
-  private async removeOldAttachments(
-    oldAttachments: Attachment[],
-    uploadDir: string,
-  ): Promise<void> {
-    for (const old of oldAttachments) {
-      const oldStoredFile = path.basename(old.url);
-      if (oldStoredFile) {
-        const oldFilePath = path.join(uploadDir, oldStoredFile);
-        try {
-          await fs.unlink(oldFilePath);
-        } catch (error) {
-          Logger.warn(
-            {
-              message: 'Could not delete old attachment file from disk',
-              action: 'Verify file permissions or ignore if already removed',
-              fileUrl: old.url,
-              reason: error instanceof Error ? error.message : String(error),
-            },
-            AttachmentsService.name,
-          );
-        }
-      }
-    }
-
-    const oldIds = oldAttachments.map((item) => item.id);
-    await this.attachmentRepository.delete(oldIds);
   }
 }

@@ -1,6 +1,7 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import { I18nService } from 'nestjs-i18n';
 import { User } from '../users/entities/user.entity.js';
 import { UsersService } from '../users/users.service.js';
 import { Follow } from './entities/follow.entity.js';
@@ -25,6 +26,7 @@ describe('ProfilesService', () => {
     password: 'hashed-password',
     bio: 'Follower bio',
     image: null,
+    tokenVersion: 1,
     createdAt: new Date(),
     updatedAt: new Date(),
   };
@@ -36,6 +38,7 @@ describe('ProfilesService', () => {
     password: 'hashed-password',
     bio: 'Famous author',
     image: '/uploads/avatars/celeb.png',
+    tokenVersion: 1,
     createdAt: new Date(),
     updatedAt: new Date(),
   };
@@ -62,6 +65,10 @@ describe('ProfilesService', () => {
         {
           provide: UsersService,
           useValue: mockUsersService,
+        },
+        {
+          provide: I18nService,
+          useValue: { t: vi.fn((key: string) => key) },
         },
       ],
     }).compile();

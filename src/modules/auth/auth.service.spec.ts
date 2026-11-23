@@ -1,26 +1,24 @@
 import { UnauthorizedException } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
-import { RedisService } from '../redis/redis.service.js';
+import { I18nService } from 'nestjs-i18n';
 import { User } from '../users/entities/user.entity.js';
 import { UsersService } from '../users/users.service.js';
 import { AuthService } from './auth.service.js';
+import { TokenService } from './token.service.js';
 
 describe('AuthService', () => {
   let authService: AuthService;
   let mockUsersService: {
     createUser: ReturnType<typeof vi.fn>;
-    updateUser: ReturnType<typeof vi.fn>;
     validateCredentials: ReturnType<typeof vi.fn>;
-    findById: ReturnType<typeof vi.fn>;
   };
-  let mockJwtService: {
-    signAsync: ReturnType<typeof vi.fn>;
-    decode: ReturnType<typeof vi.fn>;
+  let mockTokenService: {
+    generateToken: ReturnType<typeof vi.fn>;
+    revokeToken: ReturnType<typeof vi.fn>;
+    formatUserResponse: ReturnType<typeof vi.fn>;
   };
-  let mockRedisService: {
-    addTokenToBlacklist: ReturnType<typeof vi.fn>;
-    isTokenBlacklisted: ReturnType<typeof vi.fn>;
+  let mockI18nService: {
+    t: ReturnType<typeof vi.fn>;
   };
 
   const sampleUser: User = {
@@ -30,6 +28,7 @@ describe('AuthService', () => {
     password: 'hashed-password',
     bio: 'Software Engineer',
     image: null,
+    tokenVersion: 1,
     createdAt: new Date(),
     updatedAt: new Date(),
   };
@@ -37,34 +36,33 @@ describe('AuthService', () => {
   beforeEach(async () => {
     mockUsersService = {
       createUser: vi.fn().mockResolvedValue(sampleUser),
-      updateUser: vi.fn().mockResolvedValue({
-        user: { ...sampleUser, bio: 'Updated Bio' },
-        isPasswordChanged: false,
-      }),
       validateCredentials: vi.fn().mockResolvedValue(sampleUser),
-      findById: vi.fn().mockResolvedValue(sampleUser),
     };
 
-    mockJwtService = {
-      signAsync: vi.fn().mockResolvedValue('sample-jwt-token'),
-      decode: vi.fn().mockReturnValue({
-        sub: 1,
-        jti: 'sample-jti',
-        exp: Math.floor(Date.now() / 1000) + 3600,
-      }),
+    mockTokenService = {
+      generateToken: vi.fn().mockResolvedValue('sample-jwt-token'),
+      revokeToken: vi.fn().mockResolvedValue(undefined),
+      formatUserResponse: vi.fn().mockImplementation((user: User, token: string) => ({
+        user: {
+          email: user.email,
+          token,
+          username: user.username,
+          bio: user.bio,
+          image: user.image,
+        },
+      })),
     };
 
-    mockRedisService = {
-      addTokenToBlacklist: vi.fn().mockResolvedValue(undefined),
-      isTokenBlacklisted: vi.fn().mockResolvedValue(false),
+    mockI18nService = {
+      t: vi.fn((key: string) => key),
     };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
         { provide: UsersService, useValue: mockUsersService },
-        { provide: JwtService, useValue: mockJwtService },
-        { provide: RedisService, useValue: mockRedisService },
+        { provide: TokenService, useValue: mockTokenService },
+        { provide: I18nService, useValue: mockI18nService },
       ],
     }).compile();
 
@@ -83,6 +81,7 @@ describe('AuthService', () => {
       expect(result.user.email).toBe('jacob@example.com');
       expect(result.user.token).toBe('sample-jwt-token');
       expect(mockUsersService.createUser).toHaveBeenCalled();
+      expect(mockTokenService.generateToken).toHaveBeenCalledWith(sampleUser);
     });
   });
 
@@ -97,7 +96,7 @@ describe('AuthService', () => {
       expect(result.user.token).toBe('sample-jwt-token');
     });
 
-    it('should throw UnauthorizedException if credentials invalid', async () => {
+    it('should throw localized UnauthorizedException if credentials invalid', async () => {
       mockUsersService.validateCredentials.mockResolvedValue(null);
 
       await expect(
@@ -105,59 +104,17 @@ describe('AuthService', () => {
           email: 'wrong@example.com',
           password: 'wrongpassword',
         }),
-      ).rejects.toThrow(UnauthorizedException);
+      ).rejects.toThrow(
+        new UnauthorizedException('errors.AUTH_INVALID_CREDENTIALS'),
+      );
     });
   });
 
   describe('logout', () => {
-    it('should add token to redis blacklist with remaining ttl', async () => {
+    it('should revoke token via TokenService and return localized message', async () => {
       const result = await authService.logout('sample-token');
-      expect(result).toEqual({ message: 'Logged out successfully' });
-      expect(mockRedisService.addTokenToBlacklist).toHaveBeenCalledWith(
-        'sample-jti',
-        expect.any(Number),
-      );
-    });
-  });
-
-  describe('getCurrentUser', () => {
-    it('should return current user with token', () => {
-      const result = authService.getCurrentUser(sampleUser, 'current-token');
-      expect(result.user.username).toBe('jacob');
-      expect(result.user.token).toBe('current-token');
-    });
-  });
-
-  describe('updateCurrentUser', () => {
-    it('should update user and retain current token when password is not changed', async () => {
-      const result = await authService.updateCurrentUser(
-        sampleUser,
-        'current-token',
-        { user: { bio: 'Updated Bio' } },
-      );
-
-      expect(result.user.bio).toBe('Updated Bio');
-      expect(result.user.token).toBe('current-token');
-      expect(mockRedisService.addTokenToBlacklist).not.toHaveBeenCalled();
-    });
-
-    it('should blacklist old token and issue new token when password is changed', async () => {
-      mockUsersService.updateUser.mockResolvedValueOnce({
-        user: sampleUser,
-        isPasswordChanged: true,
-      });
-
-      const result = await authService.updateCurrentUser(
-        sampleUser,
-        'old-token',
-        { password: 'NewPassword123!' },
-      );
-
-      expect(mockRedisService.addTokenToBlacklist).toHaveBeenCalledWith(
-        'sample-jti',
-        expect.any(Number),
-      );
-      expect(result.user.token).toBe('sample-jwt-token');
+      expect(result).toEqual({ message: 'common.LOGOUT_SUCCESS' });
+      expect(mockTokenService.revokeToken).toHaveBeenCalledWith('sample-token');
     });
   });
 });

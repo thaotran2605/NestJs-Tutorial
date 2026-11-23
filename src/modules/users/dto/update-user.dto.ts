@@ -8,6 +8,7 @@ import {
   MinLength,
   ValidateNested,
 } from 'class-validator';
+import { IsSafeImageUrl } from '../../../common/validators/is-safe-image-url.validator.js';
 import {
   BIO_MAX_LENGTH,
   EMAIL_MAX_LENGTH,
@@ -70,6 +71,7 @@ export class UpdateUserDataDto {
   @Transform(({ value }) => (value === '' ? undefined : value))
   @IsString()
   @MaxLength(IMAGE_URL_MAX_LENGTH)
+  @IsSafeImageUrl()
   image?: string | null;
 }
 

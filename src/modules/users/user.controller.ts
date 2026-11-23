@@ -18,6 +18,7 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import { I18nContext } from 'nestjs-i18n';
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import { RawToken } from '../../common/decorators/raw-token.decorator.js';
 import {
@@ -26,16 +27,16 @@ import {
   MIME_TO_EXTENSION,
 } from '../attachments/attachments.constants.js';
 import type { UploadedAvatarFile } from '../attachments/attachments.service.js';
-import { AuthService } from '../auth/auth.service.js';
 import { UserResponseDto } from '../auth/dto/user-response.dto.js';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import { UpdateUserDto } from './dto/update-user.dto.js';
 import { User } from './entities/user.entity.js';
+import { UsersService } from './users.service.js';
 
 @ApiTags('Current User')
 @Controller('user')
 export class UserController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly usersService: UsersService) {}
 
   @Get()
   @UseGuards(JwtAuthGuard)
@@ -54,7 +55,7 @@ export class UserController {
     @CurrentUser() user: User,
     @RawToken() token: string,
   ): UserResponseDto {
-    return this.authService.getCurrentUser(user, token);
+    return this.usersService.getCurrentUser(user, token);
   }
 
   @Put()
@@ -67,12 +68,11 @@ export class UserController {
       },
       fileFilter: (_req, file, callback) => {
         if (!MIME_TO_EXTENSION[file.mimetype]) {
-          callback(
-            new BadRequestException(
-              'Only image files (jpeg, png, webp, gif) are allowed',
-            ),
-            false,
-          );
+          const i18n = I18nContext.current();
+          const message = i18n
+            ? i18n.t('errors.ATTACHMENT_INVALID_TYPE')
+            : 'Only image files (jpeg, png, webp, gif) are allowed';
+          callback(new BadRequestException(message), false);
           return;
         }
         callback(null, true);
@@ -95,7 +95,8 @@ export class UserController {
         avatar: {
           type: 'string',
           format: 'binary',
-          description: 'Optional avatar image file (jpeg, png, webp, gif, max 2MB)',
+          description:
+            'Optional avatar image file (jpeg, png, webp, gif, max 2MB)',
         },
       },
     },
@@ -120,7 +121,7 @@ export class UserController {
     @Body() updateUserDto: UpdateUserDto,
     @UploadedFile() avatarFile?: UploadedAvatarFile,
   ): Promise<UserResponseDto> {
-    return this.authService.updateCurrentUser(
+    return this.usersService.updateCurrentUser(
       user,
       token,
       updateUserDto,
