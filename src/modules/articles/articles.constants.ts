@@ -1,0 +1,20 @@
+export const ARTICLE_TITLE_MIN_LENGTH = 1;
+export const ARTICLE_TITLE_MAX_LENGTH = 255;
+export const ARTICLE_SLUG_MAX_LENGTH = 255;
+export const ARTICLE_DESCRIPTION_MIN_LENGTH = 1;
+export const ARTICLE_DESCRIPTION_MAX_LENGTH = 500;
+export const ARTICLE_BODY_MIN_LENGTH = 1;
+export const ARTICLE_BODY_MAX_LENGTH = 50000;
+
+export const TAG_NAME_MIN_LENGTH = 1;
+export const TAG_NAME_MAX_LENGTH = 50;
+export const ARTICLE_MAX_TAGS = 20;
+
+export const DEFAULT_ARTICLES_LIMIT = 20;
+export const MIN_ARTICLES_LIMIT = 1;
+export const MAX_ARTICLES_LIMIT = 100;
+export const DEFAULT_ARTICLES_OFFSET = 0;
+export const MIN_ARTICLES_OFFSET = 0;
+
+export const SLUG_RANDOM_BYTES = 3;
+export const SLUG_BASE_MAX_LENGTH = 200;
