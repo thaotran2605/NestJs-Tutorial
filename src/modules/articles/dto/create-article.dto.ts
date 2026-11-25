@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import {
   ArrayMaxSize,
   IsArray,
@@ -24,8 +24,17 @@ import {
   TAG_NAME_MIN_LENGTH,
 } from '../articles.constants.js';
 
+const trimString = ({ value }: { value: unknown }): unknown =>
+  typeof value === 'string' ? value.trim() : value;
+
+const trimStringArray = ({ value }: { value: unknown }): unknown =>
+  Array.isArray(value)
+    ? value.map((item) => (typeof item === 'string' ? item.trim() : item))
+    : value;
+
 export class CreateArticleDataDto {
   @ApiProperty({ example: 'How to train your dragon' })
+  @Transform(trimString)
   @IsNotEmpty()
   @IsString()
   @MinLength(ARTICLE_TITLE_MIN_LENGTH)
@@ -33,6 +42,7 @@ export class CreateArticleDataDto {
   title: string;
 
   @ApiProperty({ example: 'Ever wonder how?' })
+  @Transform(trimString)
   @IsNotEmpty()
   @IsString()
   @MinLength(ARTICLE_DESCRIPTION_MIN_LENGTH)
@@ -40,6 +50,7 @@ export class CreateArticleDataDto {
   description: string;
 
   @ApiProperty({ example: 'You have to believe' })
+  @Transform(trimString)
   @IsNotEmpty()
   @IsString()
   @MinLength(ARTICLE_BODY_MIN_LENGTH)
@@ -51,6 +62,7 @@ export class CreateArticleDataDto {
     type: [String],
   })
   @IsOptional()
+  @Transform(trimStringArray)
   @IsArray()
   @ArrayMaxSize(ARTICLE_MAX_TAGS)
   @IsString({ each: true })

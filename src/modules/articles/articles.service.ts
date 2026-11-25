@@ -430,6 +430,7 @@ export class ArticlesService {
       .into(Tag)
       .values(normalizedNames.map((name) => ({ name })))
       .orIgnore()
+      .updateEntity(false)
       .execute();
 
     return manager.find(Tag, {

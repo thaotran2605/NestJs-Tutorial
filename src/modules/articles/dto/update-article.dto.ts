@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import {
   ArrayMaxSize,
   IsArray,
@@ -24,9 +24,18 @@ import {
   TAG_NAME_MIN_LENGTH,
 } from '../articles.constants.js';
 
+const trimString = ({ value }: { value: unknown }): unknown =>
+  typeof value === 'string' ? value.trim() : value;
+
+const trimStringArray = ({ value }: { value: unknown }): unknown =>
+  Array.isArray(value)
+    ? value.map((item) => (typeof item === 'string' ? item.trim() : item))
+    : value;
+
 export class UpdateArticleDataDto {
   @ApiPropertyOptional({ example: 'Did you train your dragon?' })
   @IsOptional()
+  @Transform(trimString)
   @IsNotEmpty()
   @IsString()
   @MinLength(ARTICLE_TITLE_MIN_LENGTH)
@@ -35,6 +44,7 @@ export class UpdateArticleDataDto {
 
   @ApiPropertyOptional({ example: 'Updated description' })
   @IsOptional()
+  @Transform(trimString)
   @IsNotEmpty()
   @IsString()
   @MinLength(ARTICLE_DESCRIPTION_MIN_LENGTH)
@@ -43,6 +53,7 @@ export class UpdateArticleDataDto {
 
   @ApiPropertyOptional({ example: 'Updated body content' })
   @IsOptional()
+  @Transform(trimString)
   @IsNotEmpty()
   @IsString()
   @MinLength(ARTICLE_BODY_MIN_LENGTH)
@@ -54,6 +65,7 @@ export class UpdateArticleDataDto {
     type: [String],
   })
   @IsOptional()
+  @Transform(trimStringArray)
   @IsArray()
   @ArrayMaxSize(ARTICLE_MAX_TAGS)
   @IsString({ each: true })

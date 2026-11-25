@@ -57,6 +57,7 @@ describe('ArticlesService', () => {
     into: ReturnType<typeof vi.fn>;
     values: ReturnType<typeof vi.fn>;
     orIgnore: ReturnType<typeof vi.fn>;
+    updateEntity: ReturnType<typeof vi.fn>;
     execute: ReturnType<typeof vi.fn>;
   };
 
@@ -103,6 +104,7 @@ describe('ArticlesService', () => {
       into: vi.fn().mockReturnThis(),
       values: vi.fn().mockReturnThis(),
       orIgnore: vi.fn().mockReturnThis(),
+      updateEntity: vi.fn().mockReturnThis(),
       execute: vi.fn().mockResolvedValue(undefined),
     };
 
