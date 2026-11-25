@@ -15,5 +15,7 @@
   "ATTACHMENT_INVALID_TYPE": "Chỉ cho phép tệp hình ảnh (jpeg, png, webp, gif)",
   "ARTICLE_NOT_FOUND": "Không tìm thấy bài viết",
   "ARTICLE_FORBIDDEN_UPDATE": "Bạn không có quyền chỉnh sửa bài viết này",
-  "ARTICLE_FORBIDDEN_DELETE": "Bạn không có quyền xóa bài viết này"
+  "ARTICLE_FORBIDDEN_DELETE": "Bạn không có quyền xóa bài viết này",
+  "COMMENT_NOT_FOUND": "Không tìm thấy bình luận",
+  "COMMENT_FORBIDDEN_DELETE": "Bạn không có quyền xóa bình luận này"
 }
