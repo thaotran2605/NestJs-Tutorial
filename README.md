@@ -4,7 +4,7 @@
 
 ---
 
-## 🛠️ Tech Stack & Key Features (Pull 1 & Pull 2)
+## Tech Stack & Key Features (Pull 1 & Pull 2)
 
 - **Framework:** [NestJS](https://nestjs.com/) (Modular Architecture, ESM)
 - **Database & ORM:** MySQL 8 + TypeORM (Manual Migrations CLI)
