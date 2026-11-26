@@ -9,13 +9,11 @@ import {
   MinLength,
   ValidateNested,
 } from 'class-validator';
+import { trimString } from '../../../common/utils/transform.util.js';
 import {
   COMMENT_BODY_MAX_LENGTH,
   COMMENT_BODY_MIN_LENGTH,
 } from '../comments.constants.js';
-
-const trimString = ({ value }: { value: unknown }): unknown =>
-  typeof value === 'string' ? value.trim() : value;
 
 export class CreateCommentDataDto {
   @ApiProperty({ example: 'His name was my name too.' })

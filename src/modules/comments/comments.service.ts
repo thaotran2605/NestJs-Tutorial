@@ -59,6 +59,19 @@ export class CommentsService {
     const comments = await this.commentRepository.find({
       where: { articleId: article.id },
       relations: { author: true },
+      select: {
+        id: true,
+        body: true,
+        authorId: true,
+        createdAt: true,
+        updatedAt: true,
+        author: {
+          id: true,
+          username: true,
+          bio: true,
+          image: true,
+        },
+      },
       order: { createdAt: 'DESC', id: 'DESC' },
     });
 
@@ -75,6 +88,7 @@ export class CommentsService {
 
     const comment = await this.commentRepository.findOne({
       where: { id: commentId, articleId: article.id },
+      select: { id: true, authorId: true },
     });
 
     if (!comment) {
@@ -98,7 +112,7 @@ export class CommentsService {
   private async findArticleBySlugOrThrow(slug: string): Promise<Article> {
     const article = await this.articleRepository.findOne({
       where: { slug },
-      select: { id: true, authorId: true, slug: true },
+      select: { id: true, authorId: true },
     });
 
     if (!article) {

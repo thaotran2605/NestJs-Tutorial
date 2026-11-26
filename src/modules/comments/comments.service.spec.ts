@@ -164,6 +164,23 @@ describe('CommentsService', () => {
       expect(result.comments).toHaveLength(1);
       expect(result.comments[0].body).toBe('Great article!');
       expect(result.comments[0].author.following).toBe(true);
+      expect(mockCommentRepository.find).toHaveBeenCalledWith(
+        expect.objectContaining({
+          select: {
+            id: true,
+            body: true,
+            authorId: true,
+            createdAt: true,
+            updatedAt: true,
+            author: {
+              id: true,
+              username: true,
+              bio: true,
+              image: true,
+            },
+          },
+        }),
+      );
     });
 
     it('should return comments with following=false when unauthenticated', async () => {
@@ -178,6 +195,10 @@ describe('CommentsService', () => {
   describe('deleteComment', () => {
     it('should allow comment author to delete their own comment', async () => {
       await service.deleteComment(sampleArticle.slug, 100, commenter);
+      expect(mockCommentRepository.findOne).toHaveBeenCalledWith({
+        where: { id: 100, articleId: sampleArticle.id },
+        select: { id: true, authorId: true },
+      });
       expect(mockCommentRepository.delete).toHaveBeenCalledWith({ id: 100 });
     });
 
