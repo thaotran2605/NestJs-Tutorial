@@ -19,6 +19,8 @@ import { Tag } from './modules/articles/entities/tag.entity.js';
 import { AttachmentsModule } from './modules/attachments/attachments.module.js';
 import { Attachment } from './modules/attachments/entities/attachment.entity.js';
 import { AuthModule } from './modules/auth/auth.module.js';
+import { CommentsModule } from './modules/comments/comments.module.js';
+import { Comment } from './modules/comments/entities/comment.entity.js';
 import { Follow } from './modules/profiles/entities/follow.entity.js';
 import { ProfilesModule } from './modules/profiles/profiles.module.js';
 import { RedisModule } from './modules/redis/redis.module.js';
@@ -46,6 +48,7 @@ const DEFAULT_THROTTLE_LIMIT = 30;
     AuthModule,
     ProfilesModule,
     ArticlesModule,
+    CommentsModule,
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -57,7 +60,15 @@ const DEFAULT_THROTTLE_LIMIT = 30;
         password: config.getOrThrow<string>('DB_PASSWORD'),
         database: config.getOrThrow<string>('DB_DATABASE'),
         charset: 'utf8mb4_unicode_ci',
-        entities: [User, Attachment, Follow, Article, Tag, ArticleFavorite],
+        entities: [
+          User,
+          Attachment,
+          Follow,
+          Article,
+          Tag,
+          ArticleFavorite,
+          Comment,
+        ],
         synchronize: false,
       }),
     }),

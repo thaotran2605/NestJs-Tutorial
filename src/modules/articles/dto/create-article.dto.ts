@@ -13,6 +13,10 @@ import {
   ValidateNested,
 } from 'class-validator';
 import {
+  trimString,
+  trimStringArray,
+} from '../../../common/utils/transform.util.js';
+import {
   ARTICLE_BODY_MAX_LENGTH,
   ARTICLE_BODY_MIN_LENGTH,
   ARTICLE_DESCRIPTION_MAX_LENGTH,
@@ -23,14 +27,6 @@ import {
   TAG_NAME_MAX_LENGTH,
   TAG_NAME_MIN_LENGTH,
 } from '../articles.constants.js';
-
-const trimString = ({ value }: { value: unknown }): unknown =>
-  typeof value === 'string' ? value.trim() : value;
-
-const trimStringArray = ({ value }: { value: unknown }): unknown =>
-  Array.isArray(value)
-    ? value.map((item) => (typeof item === 'string' ? item.trim() : item))
-    : value;
 
 export class CreateArticleDataDto {
   @ApiProperty({ example: 'How to train your dragon' })

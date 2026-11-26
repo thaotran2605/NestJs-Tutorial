@@ -15,5 +15,7 @@
   "ATTACHMENT_INVALID_TYPE": "Only image files (jpeg, png, webp, gif) are allowed",
   "ARTICLE_NOT_FOUND": "Article not found",
   "ARTICLE_FORBIDDEN_UPDATE": "You are not authorized to update this article",
-  "ARTICLE_FORBIDDEN_DELETE": "You are not authorized to delete this article"
+  "ARTICLE_FORBIDDEN_DELETE": "You are not authorized to delete this article",
+  "COMMENT_NOT_FOUND": "Comment not found",
+  "COMMENT_FORBIDDEN_DELETE": "You are not authorized to delete this comment"
 }

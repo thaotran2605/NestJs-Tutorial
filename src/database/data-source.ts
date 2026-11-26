@@ -4,6 +4,7 @@ import { ArticleFavorite } from '../modules/articles/entities/article-favorite.e
 import { Article } from '../modules/articles/entities/article.entity.js';
 import { Tag } from '../modules/articles/entities/tag.entity.js';
 import { Attachment } from '../modules/attachments/entities/attachment.entity.js';
+import { Comment } from '../modules/comments/entities/comment.entity.js';
 import { Follow } from '../modules/profiles/entities/follow.entity.js';
 import { User } from '../modules/users/entities/user.entity.js';
 
@@ -31,7 +32,7 @@ export default new DataSource({
   password: process.env.DB_PASSWORD,
   database: process.env.DB_DATABASE,
   charset: 'utf8mb4_unicode_ci',
-  entities: [User, Attachment, Follow, Article, Tag, ArticleFavorite],
+  entities: [User, Attachment, Follow, Article, Tag, ArticleFavorite, Comment],
   migrations: ['src/database/migrations/*.ts'],
   synchronize: false,
 });
